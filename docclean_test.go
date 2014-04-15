@@ -27,7 +27,10 @@ def foo():
     """
     Undocumented. moar
     """
-    pass`
+
+class Foo(Exception):
+    """
+    """`
 
 const expected = `
 def foo():
@@ -43,7 +46,10 @@ def foo():
     """
     Undocumented. moar
     """
-    pass`
+
+class Foo(Exception):
+    """
+    """`
 
 func TestDocClean(t *testing.T) {
 	b := StripEmptyOrIrrelevantComments(bytes.NewBufferString(input))
