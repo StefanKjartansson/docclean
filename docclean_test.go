@@ -28,6 +28,10 @@ def foo():
     Undocumented. moar
     """
 
+def foo():
+    """comment
+    """
+
 class Foo(Exception):
     """
     """`
@@ -45,6 +49,10 @@ def foo():
 def foo():
     """
     Undocumented. moar
+    """
+
+def foo():
+    """comment
     """
 
 class Foo(Exception):

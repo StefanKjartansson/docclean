@@ -10,17 +10,23 @@ import (
 )
 
 func isCommentString(s string) bool {
-	return (s == "\"\"\"" || s == "'''")
+	return (strings.HasPrefix(s, "\"\"\"") || strings.HasPrefix(s, "'''"))
 }
 
 // IsEmptyOrUndocumented returns true if the array contains
 // an empty comment or if it's three lines and contains the
-// "Undocumented" comment.
-func IsEmptyOrUndocumented(cb []string) bool {
+// "Undocumented" comment. The lastString parameter is the last
+// string read before the comment was encountered.
+func IsEmptyOrUndocumented(lastString string, cb []string) bool {
+
+	// Exceptions can contain an empty string. Won't catch subclass names but it's good enough.
+	if strings.Contains(lastString, "Exception") || strings.Contains(lastString, "Error") {
+		return false
+	}
 
 	for idx, i := range cb {
 		im := strings.TrimSpace(i)
-		if idx == 1 && isCommentString(im) {
+		if idx == 1 && isCommentString(im) && len(strings.TrimSpace(cb[idx-1])) == 3 {
 			return true
 		}
 	}
@@ -40,12 +46,14 @@ func IsEmptyOrUndocumented(cb []string) bool {
 // StripEmptyOrIrrelevantComments scans the reader into a string array
 // buffer and returns it, sans empty comments and one line comments
 // containing the "Undocumented" comment.
+// TODO: investigate replacing the buffer output with an io.Writer parameter
 func StripEmptyOrIrrelevantComments(r io.Reader) (buffer []string) {
 	scanner := bufio.NewScanner(r)
 	var s string
 	var m string
 	dbuf := []string{}
 	shouldFix := false
+	var lastString string
 
 	for scanner.Scan() {
 		s = scanner.Text()
@@ -53,7 +61,7 @@ func StripEmptyOrIrrelevantComments(r io.Reader) (buffer []string) {
 		if isCommentString(m) {
 			dbuf = append(dbuf, s)
 			if len(dbuf) > 1 {
-				isEmpty := IsEmptyOrUndocumented(dbuf)
+				isEmpty := IsEmptyOrUndocumented(lastString, dbuf)
 				if isEmpty {
 					shouldFix = true
 				} else {
@@ -65,6 +73,7 @@ func StripEmptyOrIrrelevantComments(r io.Reader) (buffer []string) {
 			}
 			continue
 		}
+		lastString = m
 
 		if len(dbuf) > 0 {
 			dbuf = append(dbuf, s)
